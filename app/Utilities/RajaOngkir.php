@@ -38,6 +38,13 @@ class RajaOngkir
       return $reponses->rajaongkir->results;
    }
 
+   public function getCityById($id)
+   {
+      $fetchData = $this->client->request('GET', 'https://api.rajaongkir.com/starter/city?id=' . $id);
+      $reponses = json_decode($fetchData->getBody());
+      return $reponses->rajaongkir->results;
+   }
+
    public function getCitiesByProvinceId($id)
    {
       $fetchData = $this->client->request('GET', 'https://api.rajaongkir.com/starter/city?province=' . $id);
