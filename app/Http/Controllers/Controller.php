@@ -9,4 +9,15 @@ use Illuminate\Routing\Controller as BaseController;
 class Controller extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
+
+    protected function responseJson($status = "success", $code = 200, $message = null, $data = null)
+    {
+        return response()->json([
+            'code' => $code,
+            'status' => $status,
+            'message' => $message,
+            'timestamp' =>  \Carbon\Carbon::now(),
+            'data' => $data,
+        ], $code);
+    }
 }
