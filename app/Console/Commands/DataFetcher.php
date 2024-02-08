@@ -4,47 +4,35 @@ namespace App\Console\Commands;
 
 use App\Models\City;
 use App\Models\Province;
+use App\Utilities\RajaOngkir;
 use Illuminate\Console\Command;
 
 class DataFetcher extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
+    protected $rajaOngkir;
     protected $signature = 'fetch-data-rajaongkir';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Retrieve provinces and cities from RajaOngkir then save to local database';
 
-    /**
-     * Execute the console command.
-     */
+    function __construct()
+    {
+        parent::__construct();
+        $this->rajaOngkir = new RajaOngkir();
+    }
+
     public function handle()
     {
         $fetchProvinces = $this->getProvinces();
         $provinces = $this->insertProvince($fetchProvinces);
-
         $this->insertCities(array_reverse($provinces));
     }
 
     protected function getProvinces()
     {
         echo "Retrieving provinces from RajaOngkir...." . PHP_EOL;
-        $client = new \GuzzleHttp\Client();
-        $fetchData = $client->request('GET', 'https://api.rajaongkir.com/starter/province', [
-            "headers" => [
-                "key" => env('RAJA_ONGKIR_API_KEY')
-            ]
-        ]);
-        $reponses = json_decode($fetchData->getBody());
+        $provinces = $this->rajaOngkir->getProvinces();
         echo "Retrieved from RajaOngkir" . PHP_EOL;
-        return $reponses->rajaongkir->results;
+
+        return $provinces;
     }
 
     protected function insertProvince($data)
@@ -64,18 +52,6 @@ class DataFetcher extends Command
         return $provinces;
     }
 
-    protected function getCitiesByProvinceId($id)
-    {
-        $client = new \GuzzleHttp\Client();
-        $fetchData = $client->request('GET', 'https://api.rajaongkir.com/starter/city?province=' . $id, [
-            "headers" => [
-                "key" => env('RAJA_ONGKIR_API_KEY')
-            ]
-        ]);
-        $reponses = json_decode($fetchData->getBody());
-        return $reponses->rajaongkir->results;
-    }
-
     protected function insertCities($provinces)
     {
         if (count($provinces) == 0) {
@@ -85,8 +61,10 @@ class DataFetcher extends Command
 
         $province = array_pop($provinces);
 
-        echo "Retrieving cities under " . $province['name'] . " from RajaOngkir" . PHP_EOL;
-        $cities = $this->getCitiesByProvinceId($province['id']);
+        echo "Retrieving cities under " . $province['name'] . PHP_EOL;
+
+        $cities = $this->rajaOngkir->getCitiesByProvinceId($province['id']);
+
         echo "Retrieved. Start insert all cities to local database" . PHP_EOL;
 
         foreach ($cities as $city) {
