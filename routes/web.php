@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\CityController;
+use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProvinceController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,9 +17,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/login', [LoginController::class, 'index'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
 
-Route::get('/search/provinces', [ProvinceController::class, 'getProvince']);
-Route::get('/search/cities', [CityController::class, 'getCities']);
+Route::group(['middleware' => ['auth']], function () {
+    Route::get('/', function () {
+        return view('welcome');
+    });
+
+    Route::get('/search/provinces', function (Request $request) {
+        echo $request->cookie('data-source');
+    });
+    Route::get('/search/cities', [CityController::class, 'getCities']);
+});
